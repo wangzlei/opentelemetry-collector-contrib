@@ -1,0 +1,9 @@
+type: thirdpartyconnector
+
+status:
+  class: connector
+  stability:
+    development: [traces_to_traces, traces_to_logs]
+  distributions: []
+  codeowners:
+    active: [liustve]
