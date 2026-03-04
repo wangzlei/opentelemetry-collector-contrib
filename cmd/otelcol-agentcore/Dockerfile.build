@@ -1,0 +1,26 @@
+FROM public.ecr.aws/docker/library/golang:1.24.11 AS build
+
+ENV GOPROXY=direct
+ARG GOOS=linux
+ARG GOARCH=arm64
+
+COPY . /src/opentelemetry-collector-contrib/
+WORKDIR /src/opentelemetry-collector-contrib
+
+# Remove host-built tools to force rebuild for Linux
+RUN rm -rf .tools/
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    GOOS=${GOOS} GOARCH=${GOARCH} make otelcol-agentcore
+
+# Output stage
+FROM alpine:latest
+
+ARG GOOS=linux
+ARG GOARCH=arm64
+
+COPY --from=build /src/opentelemetry-collector-contrib/bin/otelcol-agentcore_${GOOS}_${GOARCH} /output/otelcol-agentcore
+
+WORKDIR /output
+
+CMD ["sh", "-c", "echo 'Build complete. Binary is at /output/otelcol-agentcore' && tail -f /dev/null"]
